@@ -14,12 +14,12 @@ object RetrofitClient {
         .addInterceptor(loggingInterceptor)
         .build()
 
-    val api : OpenAiApi by lazy {
+    val api : GroqApi by lazy {
         Retrofit.Builder()
             .baseUrl("https://api.groq.com/openai/")
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
-            .create(OpenAiApi::class.java)
+            .create(GroqApi::class.java)
     }
 }

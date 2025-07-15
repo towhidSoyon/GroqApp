@@ -5,13 +5,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.towhid.gptapp.presentation.ChatScreen
+import com.towhid.gptapp.presentation.ChatViewModel
 
 @Composable
-fun AppNavHost(navController: NavHostController) {
-    NavHost(navController = navController, startDestination = "chat") {
+fun AppNavHost(viewModel: ChatViewModel) {
+    NavHost(navController = rememberNavController(), startDestination = "chat") {
         composable("chat") {
-            ChatScreen(viewModel = viewModel())
+            ChatScreen(viewModel)
         }
     }
 }
+

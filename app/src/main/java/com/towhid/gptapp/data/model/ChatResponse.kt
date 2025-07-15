@@ -1,4 +1,4 @@
-package com.towhid.gptapp.data
+package com.towhid.gptapp.data.model
 
 data class ChatResponse(
     val choices: List<Choice>
