@@ -32,15 +32,10 @@ class MainActivity : ComponentActivity() {
         val viewModel = ChatViewModel(repository)
         setContent {
             GPTAPPTheme {
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    topBar = {
-                        TopAppBar(title = { Text("GPT App") })
-                    }
-                ) { padding ->
+
                     val navController = rememberNavController()
                     AppNavHost(viewModel)
-                }
+
 
             }
         }

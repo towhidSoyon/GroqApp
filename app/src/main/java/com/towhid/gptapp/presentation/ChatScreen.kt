@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -41,13 +43,16 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.towhid.gptapp.data.model.ChatMessage
 
@@ -57,7 +62,7 @@ fun ChatScreen(
     viewModel: ChatViewModel
 ) {
 
-    var prompt by remember { mutableStateOf("") }
+    var text by remember { mutableStateOf("") }
 
     val state by viewModel.state.collectAsState()
     val listState = rememberLazyListState()
@@ -70,11 +75,19 @@ fun ChatScreen(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                { Text("Chat") },
-                Modifier.background(MaterialTheme.colorScheme.onBackground)
+                title = { Text("Groq App") },
             )
         },
-        contentWindowInsets = WindowInsets(0.dp)
+        bottomBar = {
+            ChatInputBar(
+                text = text,
+                onTextChange = { text = it },
+                onSendClick = {
+                    viewModel.onAction(ChatAction.SendMessage(text))
+                    text = ""
+                }
+            )
+        }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -84,70 +97,16 @@ fun ChatScreen(
             LazyColumn(
                 state = listState,
                 modifier = Modifier
-                    .weight(1f)
-                    .padding(8.dp)
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp),
+                reverseLayout = false
             ) {
                 items(state.messages) { msg ->
                     ChatBubble(msg)
                 }
             }
 
-            var text by remember { mutableStateOf("") }
 
-            Row(
-                Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp)
-            ) {
-                BasicTextField(
-                    textStyle = MaterialTheme.typography.titleSmall.copy(MaterialTheme.colorScheme.onBackground),
-                    value = text,
-                    onValueChange = { text = it },
-                    maxLines = 1,
-                    singleLine = true,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        autoCorrect = false
-                    ),
-                    decorationBox = { innerTextField ->
-                        if (text.isEmpty()) {
-                            Text(
-                                modifier = Modifier.padding(start = 16.dp, top = 16.dp),
-                                text = "Type Here....",
-                                fontWeight = FontWeight.Light,
-                                style = MaterialTheme.typography.titleSmall.copy(
-                                    color = MaterialTheme.colorScheme.outlineVariant
-                                ),
-                                textAlign = TextAlign.Start
-                            )
-                        }
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .border(
-                                    color = MaterialTheme.colorScheme.outlineVariant,
-                                    width = 1.dp,
-                                    shape = RoundedCornerShape(10.dp)
-                                )
-                                .padding(16.dp)
-                        ) {
-                            innerTextField()
-                            Spacer(modifier = Modifier.weight(1f))
-                            Icon(
-                                Icons.Default.Send, contentDescription = "",
-                                modifier = Modifier.clickable {
-                                    viewModel.onAction(ChatAction.SendMessage(text))
-                                    text = ""
-                                }
-                            )
-                        }
-                    }
-                )
-
-            }
         }
     }
 }
@@ -180,3 +139,77 @@ fun ChatBubble(message: ChatMessage) {
         }
     }
 }
+
+@Composable
+fun ChatInputBar(
+    text: String,
+    onTextChange: (String) -> Unit,
+    onSendClick: () -> Unit
+) {
+    val scrollState = rememberScrollState()
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(12.dp).padding(bottom = 10.dp)
+            .background(
+                color = MaterialTheme.colorScheme.background, // Almost black background
+                shape = RoundedCornerShape(20.dp)
+            )
+            .border(
+                width = 1.dp,
+                color = Color(0xFF3A3A3A), // Subtle border
+                shape = RoundedCornerShape(20.dp)
+            )
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        BasicTextField(
+            value = text,
+            onValueChange = onTextChange,
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(scrollState)
+                .heightIn(min = 48.dp, max = 140.dp), // grows with text
+            maxLines = Int.MAX_VALUE,
+            singleLine = false,
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text
+            ),
+            textStyle = TextStyle(
+                color = Color.White,
+                fontSize = 16.sp
+            ),
+            decorationBox = { innerTextField ->
+                Box(
+                    contentAlignment = Alignment.CenterStart
+                ) {
+                    if (text.isEmpty()) {
+                        Text(
+                            text = "Type Here....",
+                            color = Color(0xFF888888),
+                            fontSize = 16.sp
+                        )
+                    }
+                    innerTextField()
+                }
+            }
+        )
+
+        Icon(
+            imageVector = Icons.Default.Send,
+            contentDescription = "Send",
+            tint = Color(0xFFCCCCCC),
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(start = 8.dp)
+                .size(24.dp)
+                .clickable {
+                    if (text.isNotBlank()) {
+                        onSendClick()
+                    }
+                }
+        )
+    }
+}
+
