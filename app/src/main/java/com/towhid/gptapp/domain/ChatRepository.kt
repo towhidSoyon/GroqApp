@@ -14,7 +14,7 @@ class ChatRepository(
 ) {
     suspend fun sendMessage(prompt: String): ChatMessage {
         val request = ChatRequest(
-            model = "mistral-saba-24b",
+            model = "qwen/qwen3-32b",
             messages = listOf(Message("user", prompt))
         )
         val response = api.getChatCompletion("Bearer $apiKey", request)
